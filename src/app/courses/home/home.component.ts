@@ -1,43 +1,41 @@
-import {Component, OnInit} from '@angular/core';
-import {Course} from "../model/course";
-import {Observable} from "rxjs";
-import {filter, map, tap, withLatestFrom} from "rxjs/operators";
-import {CoursesService} from "../services/courses.service";
-import {AppState} from '../../reducers';
-import {select, Store} from '@ngrx/store';
+import { Component, OnInit } from "@angular/core";
+import { Course } from "../model/course";
+import { Observable } from "rxjs";
+import { filter, map, tap, withLatestFrom } from "rxjs/operators";
+import { CoursesService } from "../services/courses.service";
+import { AppState } from "../../reducers";
+import { select, Store } from "@ngrx/store";
+import {
+  selectAdvancedCourses,
+  selectAllCourses,
+  selectBiginnerCourses,
+  selectPromoTotal,
+} from "../course.selector";
+import { AllCoursesRequestedAction } from "../course.action";
 @Component({
-    selector: 'home',
-    templateUrl: './home.component.html',
-    styleUrls: ['./home.component.css']
+  selector: "home",
+  templateUrl: "./home.component.html",
+  styleUrls: ["./home.component.css"],
 })
 export class HomeComponent implements OnInit {
+  promoTotal$: Observable<number>;
 
-    promoTotal$: Observable<number>;
+  beginnerCourses$: Observable<Course[]>;
 
-    beginnerCourses$: Observable<Course[]>;
+  advancedCourses$: Observable<Course[]>;
 
-    advancedCourses$: Observable<Course[]>;
+  constructor(
+    private coursesService: CoursesService,
+    private store: Store<AppState>
+  ) {}
 
-    constructor(private coursesService: CoursesService, private store: Store<AppState>) {
+  ngOnInit() {
+    this.store.dispatch(new AllCoursesRequestedAction({ payload: null }));
 
-    }
+    this.beginnerCourses$ = this.store.select(selectBiginnerCourses);
 
-    ngOnInit() {
+    this.advancedCourses$ = this.store.select(selectAdvancedCourses);
 
-        const courses$ = this.coursesService.findAllCourses();
-
-        this.beginnerCourses$ = courses$.pipe(
-          map(courses => courses.filter(course => course.category === 'BEGINNER') )
-        );
-
-        this.advancedCourses$ = courses$.pipe(
-            map(courses => courses.filter(course => course.category === 'ADVANCED') )
-        );
-
-        this.promoTotal$ = courses$.pipe(
-            map(courses => courses.filter(course => course.promo).length)
-        );
-
-    }
-
+    this.promoTotal$ = this.store.select(selectPromoTotal);
+  }
 }
